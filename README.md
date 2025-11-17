@@ -39,6 +39,8 @@ Enable the following options in your kernel configuration:
 
 **Note**: Module build `<M>` has been tested. Compiled-in `<*>` has not been tested.
 
+NOTE: after rebuilding the kernel with the patch, you can do steps 3, 4, and 5 manually, or you can run the normal `make`, `make install` dance from the top-level directory.
+
 ### 3. Build & Install Kernel Module
 
 See [cmx/README.md](cmx/README.md) for details.

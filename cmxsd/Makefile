@@ -17,7 +17,12 @@ EXAMPLEDIR := $(DOCDIR)/examples
 CC ?= gcc
 CFLAGS ?= -O2 -Wall -Wextra
 CPPFLAGS += -DVERSION=\"$(VERSION)\" -DPROGRAM_NAME=\"$(PROGRAM_NAME)\"
+# Include path for cmxd headers (for building before installation)
+# The symlink libcmx -> src allows #include <libcmx/cmxd-protocol.h>
+CPPFLAGS += -I../cmxd
 LDFLAGS ?=
+# Library path for libcmx.so (for building before installation)
+LDFLAGS += -L../cmxd
 
 LIBS = -lcmx
 
@@ -66,6 +71,14 @@ install: $(PROGRAM_NAME)
 	
 	# Install documentation
 	install -m 644 README.md $(DESTDIR)$(DOCDIR)/
+	
+	# Reload systemd user daemon (skip if running under sudo/no user session)
+	@if command -v systemctl >/dev/null 2>&1 && [ -n "$$DBUS_SESSION_BUS_ADDRESS" ]; then \
+		echo "Reloading systemd user daemon..."; \
+		systemctl --user daemon-reload || true; \
+	else \
+		echo "Skipping systemd user daemon-reload (run 'systemctl --user daemon-reload' manually in your session)"; \
+	fi
 
 # Uninstallation
 uninstall:

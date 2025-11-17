@@ -63,7 +63,11 @@ CONFIGFILES := support/$(PROGRAM_NAME).conf
 SERVICEFILES := support/$(PROGRAM_NAME).service
 
 # Default target
-all: $(TARGET) $(LIBRARY)
+all: $(TARGET) $(LIBRARY) libcmx
+
+# Create libcmx symlink for external projects to find headers
+libcmx:
+	ln -sf src libcmx
 
 # Build the main program (link with the library)
 $(TARGET): $(DAEMON_OBJECTS) $(LIBRARY)
@@ -100,6 +104,7 @@ analyze: $(TARGET)
 # Clean build artifacts
 clean:
 	rm -f $(TARGET) $(ALL_OBJECTS) $(LIBRARY) $(LIBRARY_SONAME) $(LIBRARY_FULLNAME) $(STATIC_LIBRARY)
+	rm -f libcmx
 
 # Distclean - remove all generated files
 distclean: clean
@@ -137,6 +142,13 @@ endif
 	ldconfig
 	# Create runtime directory for Unix domain sockets
 	install -d $(DESTDIR)/run/cmxd -m 755
+	# Reload systemd daemon
+	@if command -v systemctl >/dev/null 2>&1; then \
+		echo "Reloading systemd daemon..."; \
+		sudo systemctl daemon-reload || true; \
+	else \
+		echo "systemctl not found, skipping daemon-reload"; \
+	fi
 
 # Uninstall the program, library and supporting files
 uninstall:
