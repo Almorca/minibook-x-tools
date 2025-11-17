@@ -9,7 +9,7 @@
 obj-m += cmx.o
 
 # Inject version from top-level VERSION file
-VERSION_STRING := $(shell cat $(src)/../VERSION 2>/dev/null || echo "5.0.2")
+VERSION_STRING := $(shell cat $(src)/../VERSION 2>/dev/null || echo "9999")
 ccflags-y += -DMODULE_VERSION_STRING=\"$(VERSION_STRING)\"
 
 # Development compiler flags

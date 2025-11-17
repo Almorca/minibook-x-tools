@@ -62,7 +62,7 @@ MODULE_LICENSE("GPL");
 
 /* Version is defined at build time from VERSION file */
 #ifndef MODULE_VERSION_STRING
-#define MODULE_VERSION_STRING "5.0.0"
+#define MODULE_VERSION_STRING "9999"
 #endif
 MODULE_VERSION(MODULE_VERSION_STRING);
 
@@ -154,7 +154,7 @@ static void notify_tablet_mode_change(bool is_tablet)
 	input_report_switch(tm_input, SW_TABLET_MODE, is_tablet ? 1 : 0);
 	input_sync(tm_input);
 	
-	pr_info(CMX_DRIVER_NAME ": Tablet mode %s\n", is_tablet ? "ENABLED" : "DISABLED");
+	pr_debug(CMX_DRIVER_NAME ": Tablet mode %s\n", is_tablet ? "ENABLED" : "DISABLED");
 }
 
 /*
