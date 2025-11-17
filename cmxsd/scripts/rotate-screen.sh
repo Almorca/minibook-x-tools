@@ -5,15 +5,15 @@
 # It receives the orientation name as a parameter and rotates the screen accordingly.
 #
 # Usage: rotate-screen.sh <orientation>
-#   orientation: portrait, portrait-flipped, landscape, landscape-flipped
+#   orientation: normal, right-up, left-up, bottom-up
 #
-# Configuration: Set LANDSCAPE_TRANSFORM to match your device's natural landscape orientation
-# For DSI-1 on Chuwi Minibook X, the natural landscape is transform 3 (270 degrees)
+# Configuration: Set NORMAL_TRANSFORM to match your device's natural normal orientation
+# For DSI-1 on Chuwi Minibook X, the natural normal is transform 3 (270 degrees)
 
 set -e
 
 # Configuration
-LANDSCAPE_TRANSFORM=3  # Transform value for your device's natural landscape orientation
+NORMAL_TRANSFORM=3  # For DSI-1 on Chuwi Minibook X (270 degrees)
                        # Adjust this based on your device (0-3)
 
 # Get orientation parameter
@@ -43,35 +43,36 @@ POS_Y=$(echo "$MONITOR_INFO" | jq -r '.y')
 SCALE=$(echo "$MONITOR_INFO" | jq -r '.scale')
 
 # Map orientation to transform offset
-# portrait         -> 90 degrees clockwise from landscape  -> offset +1
-# landscape        -> natural landscape                     -> offset  0
-# portrait-flipped -> 270 degrees clockwise from landscape -> offset +3 (or -1)
-# landscape-flipped-> 180 degrees from landscape           -> offset +2
+# right-up  -> 90 degrees clockwise from normal  -> offset +1
+# normal    -> natural normal                     -> offset  0
+# left-up   -> 270 degrees clockwise from normal -> offset +3 (or -1)
+# bottom-up -> 180 degrees from normal           -> offset +2
 
 case "$ORIENTATION" in
-    landscape)
+    normal)
         OFFSET=0
         ;;
-    portrait)
+    right-up)
         OFFSET=3
         ;;
-    landscape-flipped)
+    bottom-up)
         OFFSET=2
         ;;
-    portrait-flipped)
+    left-up)
         OFFSET=1
         ;;
     *)
-        echo "Warning: Unknown orientation '$ORIENTATION', defaulting to landscape" >&2
+        echo "Warning: Unknown orientation '$ORIENTATION', defaulting to normal" >&2
         OFFSET=0
         ;;
 esac
 
 # Calculate final transform (wrap around at 4)
-TRANSFORM=$(( (LANDSCAPE_TRANSFORM + OFFSET) % 4 ))
+TRANSFORM=$(( (NORMAL_TRANSFORM + OFFSET) % 4 ))
 
 # Apply the new monitor configuration
 echo "Rotating $MONITOR_NAME to $ORIENTATION (transform $TRANSFORM)"
 hyprctl keyword monitor "$MONITOR_NAME,${WIDTH}x${HEIGHT}@${REFRESH},${POS_X}x${POS_Y},$SCALE,transform,$TRANSFORM"
+hyprctl keyword input:touchdevice:transform "$TRANSFORM"
 
 exit 0
