@@ -117,6 +117,72 @@ void cmxd_apply_scale(int raw_x, int raw_y, int raw_z, double scale,
     }
 }
 
+/* Set accelerometer to least sensitive scale for more stable readings */
+int cmxd_set_least_sensitive_scale(const char *device_name)
+{
+    char scale_avail_path[PATH_MAX];
+    char scale_path[PATH_MAX];
+    FILE *fp;
+    char line[256];
+    double max_scale = 0.0;
+    double scale;
+    int count = 0;
+    
+    /* Build paths */
+    snprintf(scale_avail_path, sizeof(scale_avail_path), 
+             IIO_ACCEL_SCALE_AVAIL_TEMPLATE, device_name);
+    snprintf(scale_path, sizeof(scale_path), 
+             IIO_ACCEL_SCALE_TEMPLATE, device_name);
+    
+    /* Read available scales */
+    fp = cmxd_safe_fopen(scale_avail_path, "r");
+    if (!fp) {
+        log_warn("Failed to open %s - scale adjustment skipped", scale_avail_path);
+        return -1;
+    }
+    
+    /* Parse available scales and find the maximum (least sensitive) */
+    if (fgets(line, sizeof(line), fp)) {
+        char *token = strtok(line, " \t\n");
+        while (token) {
+            if (sscanf(token, "%lf", &scale) == 1) {
+                count++;
+                if (scale > max_scale) {
+                    max_scale = scale;
+                }
+            }
+            token = strtok(NULL, " \t\n");
+        }
+    }
+    cmxd_safe_fclose(fp, scale_avail_path);
+    
+    if (count == 0 || max_scale == 0.0) {
+        log_warn("No valid scales found in %s", scale_avail_path);
+        return -1;
+    }
+    
+    log_info("Found %d available scale(s) for %s, setting to least sensitive: %f", 
+             count, device_name, max_scale);
+    
+    /* Write the maximum scale */
+    fp = cmxd_safe_fopen(scale_path, "w");
+    if (!fp) {
+        log_error("Failed to open %s for writing", scale_path);
+        return -1;
+    }
+    
+    if (fprintf(fp, "%f\n", max_scale) < 0) {
+        log_error("Failed to write scale to %s: %s", scale_path, strerror(errno));
+        cmxd_safe_fclose(fp, scale_path);
+        return -1;
+    }
+    
+    cmxd_safe_fclose(fp, scale_path);
+    log_info("Successfully set %s to scale %f", device_name, max_scale);
+    
+    return 0;
+}
+
 /*
  * =============================================================================
  * KERNEL MODULE COMMUNICATION (SYSFS)

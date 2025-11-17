@@ -42,6 +42,8 @@
 #define IIO_ACCEL_X_RAW_TEMPLATE        IIO_DEVICES_PATH "/%s/in_accel_x_raw"
 #define IIO_ACCEL_Y_RAW_TEMPLATE        IIO_DEVICES_PATH "/%s/in_accel_y_raw"
 #define IIO_ACCEL_Z_RAW_TEMPLATE        IIO_DEVICES_PATH "/%s/in_accel_z_raw"
+#define IIO_ACCEL_SCALE_TEMPLATE        IIO_DEVICES_PATH "/%s/in_accel_scale"
+#define IIO_ACCEL_SCALE_AVAIL_TEMPLATE  IIO_DEVICES_PATH "/%s/in_accel_scale_available"
 
 /* IIO scan elements path templates */
 #define IIO_SCAN_ACCEL_X_INDEX_TEMPLATE IIO_DEVICES_PATH "/%s/scan_elements/in_accel_x_index"

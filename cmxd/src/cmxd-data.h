@@ -60,6 +60,8 @@ double cmxd_read_accel_scale(const char *device_name);
 void cmxd_apply_scale(int raw_x, int raw_y, int raw_z, double scale,
                       int *scaled_x, int *scaled_y, int *scaled_z);
 
+int cmxd_set_least_sensitive_scale(const char *device_name);
+
 int cmxd_write_vector(const char *name, int x, int y, int z);
 int cmxd_write_mode(const char *mode);
 int cmxd_write_orientation(const char *orientation);

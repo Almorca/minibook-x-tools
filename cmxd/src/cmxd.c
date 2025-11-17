@@ -737,6 +737,11 @@ int main(int argc, char **argv)
         return 1;
     }
     
+    /* Set accelerometers to least sensitive scale for stability */
+    log_info("Configuring accelerometer sensitivity...");
+    cmxd_set_least_sensitive_scale(cfg.base_dev);
+    cmxd_set_least_sensitive_scale(cfg.lid_dev);
+    
     /* Initialize orientation detection module */
     cmxd_orientation_init();
     cmxd_orientation_set_log_debug(log_debug_callback);
