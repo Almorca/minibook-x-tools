@@ -1,267 +1,96 @@
 # CMX - Chuwi Minibook X Kernel Module
 
-A Linux kernel module providing hardware support for the Chuwi Minibook X convertible laptop, including accelerometer device instantiation with mount matrices and tablet mode detection infrastructure.
+Platform driver for tablet mode detection on the Chuwi Minibook X convertible laptop. Provides `SW_TABLET_MODE` input events and sysfs interface for communication with the userspace daemon (cmxd).
 
-## Overview
+## Prerequisites
 
-This kernel module provides the foundation for tablet mode detection on the Chuwi Minibook X. It handles hardware detection, I2C device setup, mount matrix transformations, and provides infrastructure for tablet mode events.
+This module requires kernel patches from `../cmx-kernel-patch/` to be applied:
+- Disables automatic ACPI loading for MXC4005 accelerometer devices (HID `MDA6655`)
+- Enables serial-multi-instantiate driver support for multiple MXC4005 instances
 
-**Important**: This module provides infrastructure only. It does not implement actual angle calculations or automatic tablet mode switching. External logic is required to read accelerometer data and update the module via sysfs.
+Without these patches, the accelerometer devices will not be properly initialized.
 
-## Features
+## Building
 
-- **Hardware Detection**: Automatic DMI-based detection of Chuwi Minibook X hardware
-- **I2C Device Setup**: Instantiates MXC4005 accelerometer devices with proper mount matrices
-- **Existing Device Support**: Applies mount matrices to already-instantiated devices
-- **Mount Matrix Support**: Applies 90° rotations to correct sensor orientation
-- **Input Device**: Creates `/dev/input/eventX` for `SW_TABLET_MODE` events
-- **Sysfs Interface**: Provides runtime configuration and manual data input
-- **Platform Driver**: Integrates with Linux platform device subsystem
+The module build hooks into the kernel build, so you'll need to have taken care of
+that first.
 
-## Quick Start
-
-### Build and Load
 ```bash
-# Build the module
-make
-
-# Load the module
-sudo make load
-
-# Check status
-make dmesg
-```
-
-### Basic Usage
-
-Check tablet mode events:
-```bash
-# Check current mode
-cat /sys/devices/platform/cmx/mode
-
-# Test input device
-evtest /dev/input/by-path/*tablet*
-```
-
-## Module Parameters
-
-Configure hardware detection and behavior at load time:
-
-### Hardware Configuration
-- `enable_mount_matrix=1` - Apply mount matrix transformations
-
-### Loading Examples
-```bash
-# Custom I2C configuration
-sudo insmod cmx.ko lid_bus=14 base_bus=11
-
-# Enable debugging
-sudo insmod cmx.ko debug_mode=1
-
-# Custom thresholds
-sudo insmod cmx.ko enter_deg=180 exit_deg=160
+make           # Build module
+make modules_install
 ```
 
 ## Sysfs Interface
 
-Runtime configuration and monitoring at `/sys/kernel/cmx/`:
+All sysfs attributes are located at `/sys/devices/platform/cmx/`:
 
-### Data Input/Output
-- `base_vec` (rw) - Base accelerometer vector: "x y z" in micro-g
-- `lid_vec` (rw) - Lid accelerometer vector: "x y z" in micro-g
-- `mode` (rw) - Current mode: laptop, flat, tent, tablet
-- `orientation` (rw) - Current orientation: normal, right-up, left-up, bottom-up
+### Data Input/Output (rw)
+- **`base_vec`** - Base accelerometer vector: `"x y z"` (micro-g units)
+- **`lid_vec`** - Lid accelerometer vector: `"x y z"` (micro-g units)
+- **`mode`** - Current mode: `laptop`, `flat`, `tent`, `tablet`
+- **`orientation`** - Current orientation: `normal`, `right-up`, `left-up`, `bottom-up`
 
-### Device Information
-- `iio_base_device` (r) - IIO device name for base accelerometer
-- `iio_lid_device` (r) - IIO device name for lid accelerometer
+### Device Information (r)
+- **`iio_base_device`** - IIO device name for base accelerometer (typically `iio:device1`)
+- **`iio_lid_device`** - IIO device name for lid accelerometer (typically `iio:device0`)
 
-### Event Control
-- `enable` (rw) - Enable/disable tablet mode events: accepts `true`/`false`, `1`/`0`, `yes`/`no`, `y`/`n`, `t`/`f` (case-insensitive)
+### Event Control (rw)
+- **`enable`** - Enable/disable tablet mode events
+  - Accepts: `true`/`false`, `1`/`0`, `yes`/`no`, `y`/`n`, `t`/`f` (case-insensitive)
+  - Returns: `true` or `false`
 
-### Usage Examples
+## Usage Examples
+
 ```bash
 # Check current state
-cat /sys/kernel/cmx/mode
-cat /sys/kernel/cmx/orientation
+cat /sys/devices/platform/cmx/mode
+cat /sys/devices/platform/cmx/orientation
 
-# Check if events are enabled
-cat /sys/kernel/cmx/enable
+# Check assigned IIO devices
+cat /sys/devices/platform/cmx/iio_base_device
+cat /sys/devices/platform/cmx/iio_lid_device
 
-# Disable tablet mode events (multiple formats accepted)
-echo "false" > /sys/kernel/cmx/enable
-echo "0" > /sys/kernel/cmx/enable
-echo "no" > /sys/kernel/cmx/enable
+# Disable tablet mode events
+echo "false" > /sys/devices/platform/cmx/enable
 
-# Re-enable tablet mode events
-echo "true" > /sys/kernel/cmx/enable
-echo "1" > /sys/kernel/cmx/enable
-echo "yes" > /sys/kernel/cmx/enable
+# Write accelerometer data (typically done by cmxd)
+echo "0 0 9800000" > /sys/devices/platform/cmx/base_vec
+echo "0 0 9800000" > /sys/devices/platform/cmx/lid_vec
 
-# Set accelerometer data manually (for testing)
-echo "0 0 1000000" > /sys/kernel/cmx/base_vec
-echo "500000 0 500000" > /sys/kernel/cmx/lid_vec
-
-# Force tablet mode
-echo "tablet" > /sys/kernel/cmx/mode
+# Write mode/orientation (typically done by cmxd)
+echo "laptop" > /sys/devices/platform/cmx/mode
+echo "normal" > /sys/devices/platform/cmx/orientation
 ```
 
-## Input Device
+## Input Events
 
-The module creates an input device that reports tablet mode changes:
+When enabled, the module generates `SW_TABLET_MODE` input events:
+- **0** = Laptop mode
+- **1** = Tablet mode (tablet/tent modes)
 
+Monitor with:
 ```bash
-# Find the input device
-ls /dev/input/by-path/*tablet*
-
-# Monitor events (install evtest if needed)
-evtest /dev/input/by-path/*tablet*
+evtest /dev/input/eventX  # Find correct device with SW_TABLET_MODE capability
 ```
 
-Events reported:
-- `SW_TABLET_MODE`: 0=laptop mode, 1=tablet mode
+## Communication Flow
 
-### Event Control
-
-Tablet mode events can be enabled or disabled without unloading the module:
-
-```bash
-# Disable events (multiple formats supported)
-echo "false" > /sys/kernel/cmx/enable
-echo "0" > /sys/kernel/cmx/enable
-
-# Check current state (always shows "true" or "false")
-cat /sys/kernel/cmx/enable
-
-# Re-enable events
-echo "true" > /sys/kernel/cmx/enable
+```
+IIO Accelerometers → cmxd daemon → sysfs (this module) → Input Events
 ```
 
-When disabled:
-- Mode changes are still tracked internally
-- No `SW_TABLET_MODE` events are sent to the system
-- Useful for preventing unwanted mode switches during specific tasks
+The cmxd userspace daemon:
+1. Reads raw accelerometer data from IIO devices
+2. Calculates hinge angles and device orientation
+3. Writes processed data to this module's sysfs interface
+4. Module generates input events for desktop integration
 
-## Hardware Support
+## Module Parameters
 
-### Supported Devices
-- **Vendor**: "CHUWI Innovation And Technology(ShenZhen)co.,Ltd"
-- **Product**: "MiniBook X"
+None. The module automatically discovers IIO accelerometer devices via DMI matching and ACPI enumeration.
 
-### Expected Hardware
-Two MXC4005 accelerometer devices:
-- **Lid sensor**: typically I2C bus 13, address 0x15
-- **Base sensor**: typically I2C bus 12, address 0x15
+## Dependencies
 
-### Mount Matrices
-The module applies coordinate transformations:
-- **Lid sensor**: 90° counter-clockwise rotation
-- **Base sensor**: 90° clockwise rotation
-
-This corrects for physical sensor mounting orientation.
-
-## Build System
-
-### Make Targets
-- `make` or `make all` - Build the module
-- `make clean` - Clean build artifacts
-- `make install` - Install to system modules
-- `make load` - Load the module
-- `make unload` - Unload the module
-- `make reload` - Unload and reload
-- `make test` - Load and run basic tests
-- `make dmesg` - Show recent kernel messages
-- `make help` - Show available targets
-
-### Dependencies
-- Linux kernel with headers
-- MXC4005 accelerometer driver
-- I2C subsystem support
-
-## Kernel Configuration
-
-For in-tree builds:
-```
-CONFIG_CMX=m
-```
-
-Required kernel features:
-- `CONFIG_X86=y`
-- `CONFIG_ACPI=y`
-- `CONFIG_INPUT=y`
-- `CONFIG_IIO=y`
-- `CONFIG_I2C=y`
-- `CONFIG_MXC4005=m` (accelerometer driver dependency)
-
-## Debugging
-
-### Basic Troubleshooting
-```bash
-# Check if module loaded
-lsmod | grep cmx
-
-# Check kernel messages
-dmesg | grep -i "cmx"
-
-# Check input device
-ls /dev/input/by-path/ | grep tablet
-```
-
-## Implementation Notes
-
-### Current State
-This module provides **infrastructure only**:
-- ✅ Hardware detection and I2C device setup
-- ✅ Mount matrix transformations
-- ✅ Sysfs interface for data input/output
-- ✅ Input device for tablet mode events
-- ❌ Automatic angle calculations
-- ❌ Automatic tablet mode switching
-
-See the cooperating daemon that handles the angle detection, mode changes, and
-orientation changes.
-
-### Required External Logic
-To implement full tablet mode detection, external software must:
-
-1. **Read accelerometer data** from IIO devices
-2. **Calculate hinge angles** from sensor readings
-3. **Compare angles** against thresholds with hysteresis
-4. **Update module** via sysfs interface
-
-Example workflow:
-```bash
-# 1. Read from IIO devices (external daemon)
-iio_device_0="/sys/bus/iio/devices/iio:device0/"
-base_x=$(cat $iio_device_0/in_accel_x_raw)
-# ... process mount matrix transformations
-
-# 2. Calculate angle (external logic)
-# angle = calculate_hinge_angle(base_vec, lid_vec)
-
-# 3. Update kernel module
-echo "$base_x $base_y $base_z" > /sys/kernel/cmx/base_vec
-echo "$lid_x $lid_y $lid_z" > /sys/kernel/cmx/lid_vec
-```
-
-### Architecture
-- **Platform Driver**: Standard Linux platform driver model
-- **Work Queues**: Uses delayed work for periodic processing
-- **Input Events**: Reports via standard Linux input subsystem
-- **Fixed-Point Math**: Avoids floating-point operations in kernel
-
-## License
-
-GPL v2.0 or later. See individual file headers for details.
-
-## Version
-
-Current version: 3.0 (MODULE_VERSION defined in source)
-
-## Contributing
-
-When contributing:
-1. Follow Linux kernel coding standards
-2. Test on actual Chuwi Minibook X hardware
-3. Update documentation for API changes
-4. Ensure clean compilation without warnings
+- `serial_multi_instantiate` (soft dependency, loads automatically)
+- MXC4005 accelerometer driver (IIO subsystem)
+- Kernel patches from `../cmx-kernel-patch/`

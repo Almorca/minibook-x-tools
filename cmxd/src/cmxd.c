@@ -48,8 +48,10 @@
 #define PATH_MAX 4096
 #endif
 
+#ifndef VERSION
+#define VERSION "9999"
+#endif
 #define PROGRAM_NAME "cmxd"
-/* VERSION is defined by Makefile from VERSION file */
 
 #define DEVICE_NAME_MAX 128
 
