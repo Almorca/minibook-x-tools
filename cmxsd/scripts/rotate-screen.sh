@@ -35,6 +35,7 @@ fi
 
 # Extract monitor name and current settings
 MONITOR_NAME=$(echo "$MONITOR_INFO" | jq -r '.name')
+TOUCHSCREEN_NAME="goodix-capacitive-touchscreen-1"
 WIDTH=$(echo "$MONITOR_INFO" | jq -r '.width')
 HEIGHT=$(echo "$MONITOR_INFO" | jq -r '.height')
 REFRESH=$(echo "$MONITOR_INFO" | jq -r '.refreshRate' | cut -d. -f1)
@@ -73,6 +74,10 @@ TRANSFORM=$(( (NORMAL_TRANSFORM + OFFSET) % 4 ))
 # Apply the new monitor configuration
 echo "Rotating $MONITOR_NAME to $ORIENTATION (transform $TRANSFORM)"
 hyprctl keyword monitor "$MONITOR_NAME,${WIDTH}x${HEIGHT}@${REFRESH},${POS_X}x${POS_Y},$SCALE,transform,$TRANSFORM"
+### NOTE: keyword paths are very very very tied to how one's hyprland config is setup.
+###   If you have multiple touch devices, make sure to override transforms in each as appropriate.
+###   This *has* to be the global setting, as of hyprland 0.52.1 and hyprlang 0.6.5
+###   there seems to be no way to address devices by name.
 hyprctl keyword input:touchdevice:transform "$TRANSFORM"
 
 exit 0
