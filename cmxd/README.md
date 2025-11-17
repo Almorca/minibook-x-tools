@@ -2,6 +2,8 @@
 
 Userspace daemon for tablet mode detection on the Chuwi Minibook X convertible laptop. Reads accelerometer data, calculates hinge angles and device orientation, and communicates with the cmx kernel module.
 
+**cmxd** uses triggered IIO events instead of polling to minimize CPU wakeups and power consumption. The daemon sleeps until the hardware generates data-ready events, providing efficient operation with minimal system impact.
+
 ## Features
 
 - **Event-driven IIO sampling** - Low CPU usage, high responsiveness
