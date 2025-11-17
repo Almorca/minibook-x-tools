@@ -4,7 +4,7 @@ Documentation=man:cmxsd(8)
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/cmxsd -f -c %h/.config/cmxsd/daemon.conf
+ExecStart=/usr/bin/cmxsd -c %h/.config/cmxsd/daemon.conf
 Restart=on-failure
 RestartSec=5
 
