@@ -1,11 +1,18 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /*
  * DBus Integration Module for CMXD
  * 
+ * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * See the LICENSE file in the parent directory for the full license text.
+ * 
  * Implements DBus interfaces for orientation and tablet mode detection.
  * Provides compatibility with iio-sensor-proxy and custom interfaces.
- * 
- * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
  */
 
 #ifdef ENABLE_DBUS

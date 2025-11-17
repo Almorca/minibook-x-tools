@@ -1,12 +1,19 @@
-// SPDX-License-Identifier: GPL-2.0
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /* 
  * Chuwi Minibook X Daemon - Main Application
+ *
+ * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * See the LICENSE file in the parent directory for the full license text.
  * 
  * Primary daemon executable that coordinates accelerometer data collection,
  * mode detection, and kernel module communication. Handles signal management,
  * configuration, and the main event loop for continuous device monitoring.
- *
- * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
  */
 
 #include <stdio.h>

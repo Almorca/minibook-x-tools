@@ -1,6 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /**
  * @file cmxd-protocol.h
  * @brief Shared protocol definitions for cmxd socket communication
+ * 
+ * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * See the LICENSE file in the parent directory for the full license text.
  * 
  * This header defines the message formats and parsing utilities used for
  * communication between cmxd and client applications like tablet-mode-daemon.

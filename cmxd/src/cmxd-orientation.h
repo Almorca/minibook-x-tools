@@ -1,12 +1,19 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /*
  * Device Orientation Detection Module
+ * 
+ * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * See the LICENSE file in the parent directory for the full license text.
  * 
  * Provides dual-sensor orientation detection for the Chuwi Minibook X,
  * supporting both single accelerometer and dual-accelerometer configurations.
  * Includes tablet mode awareness and tilt-based sensor switching.
- * 
- * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
  */
 
 #ifndef CMXD_ORIENTATION_H

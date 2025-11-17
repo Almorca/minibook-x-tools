@@ -1,11 +1,18 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /*
  * Mathematical Calculation Module
  * 
+ * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * See the LICENSE file in the parent directory for the full license text.
+ * 
  * Provides simplified mathematical functions for hinge angle determination 
  * using dual accelerometer data. Now simplified with correct mount matrices!
- * 
- * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
  */
 
 #ifndef CMXD_CALCULATIONS_H

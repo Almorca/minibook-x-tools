@@ -1,11 +1,18 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /*
  * Simplified Mode Detection for CMXD (Chuwi Minibook X Daemon)
  * 
+ * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * See the LICENSE file in the parent directory for the full license text.
+ * 
  * Simple device mode detection based on hinge angle calculations.
  * Now simplified thanks to correct mount matrices providing reliable angles!
- * 
- * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
  */
 
 #include "cmxd-modes.h"

@@ -1,10 +1,17 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /*
  * System paths and constants for CMXD (Chuwi Minibook X Daemon)
  * 
- * Centralized location for all system paths used throughout the application
- * 
  * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * See the LICENSE file in the parent directory for the full license text.
+ * 
+ * Centralized location for all system paths used throughout the application
  */
 
 #ifndef CMXD_PATHS_H

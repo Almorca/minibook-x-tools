@@ -12,7 +12,6 @@
  * serial-multi-instantiate driver and exposes their paths via sysfs
  * for use by the userspace daemon (cmxd) which performs the actual
  * accelerometer data processing and tablet mode detection.
- *
 */
 
 #include <linux/module.h>

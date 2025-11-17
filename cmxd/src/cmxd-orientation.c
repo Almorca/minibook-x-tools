@@ -1,12 +1,19 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /*
  * Device Orientation Detection Implementation
+ * 
+ * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * See the LICENSE file in the parent directory for the full license text.
  * 
  * Implements accelerometer-based orientation detection with tablet mode
  * awareness and dual-sensor support. Provides platform-independent 
  * orientation mapping and stability protection.
- * 
- * Copyright (c) 2025 Armando DiCianno <armando@noonshy.com>
  */
 
 #include "cmxd-orientation.h"
