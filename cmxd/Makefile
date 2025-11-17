@@ -125,6 +125,9 @@ install: $(TARGET) $(LIBRARY)
 	# Install systemd service
 	install -d $(DESTDIR)$(SYSTEMDDIR)
 	install -m 644 $(SERVICEFILES) $(DESTDIR)$(SYSTEMDDIR)/
+	# Install man page
+	install -d $(DESTDIR)$(MANDIR)/man8
+	install -m 644 support/$(PROGRAM_NAME).8 $(DESTDIR)$(MANDIR)/man8/
 	# Install DBus policy (if DBus is enabled)
 ifeq ($(ENABLE_DBUS),1)
 	install -d $(DESTDIR)$(SYSCONFDIR)/dbus-1/system.d
@@ -142,6 +145,7 @@ uninstall:
 	rm -rf $(DESTDIR)$(INCLUDEDIR)
 	rm -f $(DESTDIR)$(SYSCONFDIR)/default/$(PROGRAM_NAME)
 	rm -f $(DESTDIR)$(SYSTEMDDIR)/$(PROGRAM_NAME).service
+	rm -f $(DESTDIR)$(MANDIR)/man8/$(PROGRAM_NAME).8
 ifeq ($(ENABLE_DBUS),1)
 	rm -f $(DESTDIR)$(SYSCONFDIR)/dbus-1/system.d/cmxd-dbus.conf
 endif
