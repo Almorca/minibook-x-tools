@@ -21,7 +21,7 @@
  * Mode boundary angles - these match the constants defined in cmxd-modes.c
  * See the implementation file for detailed angle range descriptions.
  */
-extern const double CMXD_MODE_CLOSING_MAX;
+extern const double CMXD_MODE_DEAD_ZONE_MAX;
 extern const double CMXD_MODE_LAPTOP_MAX;
 extern const double CMXD_MODE_FLAT_MAX;
 extern const double CMXD_MODE_TENT_MAX;

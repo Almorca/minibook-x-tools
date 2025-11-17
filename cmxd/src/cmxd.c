@@ -180,9 +180,9 @@ static void cleanup_and_exit(void)
         log_warn("Failed to restore laptop mode during cleanup");
     }
     
-    /* Force landscape orientation as safe default */
-    if (cmxd_write_orientation(CMXD_PROTOCOL_ORIENTATION_LANDSCAPE) < 0) {
-        log_warn("Failed to restore landscape orientation during cleanup");
+    /* Force normal orientation as safe default */
+    if (cmxd_write_orientation(CMXD_PROTOCOL_ORIENTATION_NORMAL) < 0) {
+        log_warn("Failed to restore normal orientation during cleanup");
     }
     
     /* Cleanup event system */

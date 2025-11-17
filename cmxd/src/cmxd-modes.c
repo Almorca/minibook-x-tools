@@ -16,16 +16,16 @@
 #include <stdarg.h>
 
 /* 
- * Correct mode boundaries based on physical hinge angles:
- *   Closing: 0° to 45°     (device closing to nearly closed)
- *   Laptop:  45° to 160°   (traditional laptop position, 90° ideal)
- *   Flat:    160° to 240°  (opening towards flat, ~180° = completely flat)
- *   Tent:    240° to 345°  (tent mode - lid folded back, extended range for inverted tent)
- *   Tablet:  345° to 360°  (fully folded back for tablet use)
+ * Mode boundaries based on physical hinge angles:
+ *   Dead Zone: 0° to 45°     (maintain current mode - device closing/opening)
+ *   Laptop:    45° to 160°   (traditional laptop position, 90° ideal)
+ *   Flat:      160° to 240°  (opening towards flat, ~180° = completely flat)
+ *   Tent:      240° to 345°  (tent mode - lid folded back, extended range for inverted tent)
+ *   Tablet:    345° to 360°  (fully folded back for tablet use)
  *
  * These ranges account for the 360° hinge angle calculation.
  */
-const double CMXD_MODE_CLOSING_MAX = 45.0;      
+const double CMXD_MODE_DEAD_ZONE_MAX = 45.0;    /* Dead zone - maintain current mode */
 const double CMXD_MODE_LAPTOP_MAX = 160.0;      
 const double CMXD_MODE_FLAT_MAX = 240.0;        
 const double CMXD_MODE_TENT_MAX = 345.0;        /* Extended for inverted tent configurations */
@@ -42,7 +42,6 @@ const double CMXD_GRAVITY_TILT_THRESHOLD = 20.0;  /* Max horizontal acceleration
 
 /* Mode-specific tilt tolerance constants - increased to reduce false indeterminate mode */
 const double CMXD_LAPTOP_TILT_TOLERANCE = 12.0;   /* Laptop can handle significant tilt */
-const double CMXD_CLOSING_TILT_TOLERANCE = 12.0;  /* Closing same as laptop */
 const double CMXD_FLAT_TILT_TOLERANCE = 18.0;     /* Flat mode higher tolerance for transitions to tent/tablet */
 const double CMXD_TENT_TILT_TOLERANCE = 20.0;     /* Tent mode has high horizontal acceleration due to sensor orientation */
 const double CMXD_TABLET_TILT_TOLERANCE = 15.0;   /* Tablet higher tolerance for handheld use */
@@ -52,7 +51,6 @@ const int CMXD_MODE_STABILITY_SAMPLES = 3;
 
 /* Mode sequence for preventing jumps - now includes indeterminate state */
 static const char* const mode_sequence[] = {
-    CMXD_PROTOCOL_MODE_CLOSING,
     CMXD_PROTOCOL_MODE_LAPTOP,
     CMXD_PROTOCOL_MODE_FLAT,
     CMXD_PROTOCOL_MODE_TENT,
@@ -65,14 +63,14 @@ static const int mode_sequence_length = sizeof(mode_sequence) / sizeof(mode_sequ
 /* Get mode index in sequence */
 static int get_mode_index(const char* mode)
 {
-    if (!mode) return 1; /* Default to laptop */
+    if (!mode) return 0; /* Default to laptop */
     
     for (int i = 0; i < mode_sequence_length; i++) {
         if (strcmp(mode, mode_sequence[i]) == 0) {
             return i;
         }
     }
-    return 1; /* Default to laptop if not found */
+    return 0; /* Default to laptop if not found */
 }
 
 /* Check if mode transition is allowed (prevents jumping) */
@@ -127,8 +125,6 @@ static bool is_gravity_confident_for_mode(double base_mag, double lid_mag, doubl
     
     if (strcmp(current_mode, CMXD_PROTOCOL_MODE_LAPTOP) == 0) {
         tilt_tolerance = CMXD_LAPTOP_TILT_TOLERANCE;
-    } else if (strcmp(current_mode, CMXD_PROTOCOL_MODE_CLOSING) == 0) {
-        tilt_tolerance = CMXD_CLOSING_TILT_TOLERANCE;
     } else if (strcmp(current_mode, CMXD_PROTOCOL_MODE_FLAT) == 0) {
         tilt_tolerance = CMXD_FLAT_TILT_TOLERANCE;
     } else if (strcmp(current_mode, CMXD_PROTOCOL_MODE_TENT) == 0) {
@@ -186,11 +182,19 @@ const char* cmxd_get_device_mode(double angle, const char* current_mode_param)
         return CMXD_PROTOCOL_MODE_LAPTOP;  /* Default for invalid readings */
     }
     
+    /* Dead zone: 0-45° maintains current mode (device closing/opening) */
+    if (angle < CMXD_MODE_DEAD_ZONE_MAX) {
+        /* In dead zone - maintain current mode unless it's invalid */
+        if (current_mode_param && strcmp(current_mode_param, CMXD_MODE_INDETERMINATE) != 0) {
+            return current_mode_param;  /* Keep current mode */
+        }
+        /* If no valid current mode, default to laptop */
+        return CMXD_PROTOCOL_MODE_LAPTOP;
+    }
+    
     /* Determine base mode from angle */
     const char* new_mode;
-    if (angle < CMXD_MODE_CLOSING_MAX) {
-        new_mode = CMXD_PROTOCOL_MODE_CLOSING;
-    } else if (angle < CMXD_MODE_LAPTOP_MAX) {
+    if (angle < CMXD_MODE_LAPTOP_MAX) {
         new_mode = CMXD_PROTOCOL_MODE_LAPTOP;
     } else if (angle < CMXD_MODE_FLAT_MAX) {
         new_mode = CMXD_PROTOCOL_MODE_FLAT;
@@ -210,24 +214,12 @@ const char* cmxd_get_device_mode(double angle, const char* current_mode_param)
             /* Transition is allowed - apply mode-specific hysteresis */
             double hysteresis = CMXD_MODE_HYSTERESIS;
             
-            /* Use smaller hysteresis for closing/laptop transitions for better responsiveness */
-            bool is_closing_transition = (strcmp(current_mode_param, CMXD_PROTOCOL_MODE_CLOSING) == 0 && strcmp(new_mode, CMXD_PROTOCOL_MODE_LAPTOP) == 0) ||
-                                        (strcmp(current_mode_param, CMXD_PROTOCOL_MODE_LAPTOP) == 0 && strcmp(new_mode, CMXD_PROTOCOL_MODE_CLOSING) == 0);
-            
-            if (is_closing_transition) {
-                hysteresis = 3.0;  /* Smaller hysteresis for closing transitions */
-            }
-            
             /* Check if we need hysteresis to prevent mode flipping */
             if (strcmp(current_mode_param, new_mode) != 0) {
                 /* Mode would change - check if we're near a boundary with bidirectional hysteresis */
                 
                 /* Forward transitions (increasing angle) */
-                if ((strcmp(new_mode, CMXD_PROTOCOL_MODE_LAPTOP) == 0 && strcmp(current_mode_param, CMXD_PROTOCOL_MODE_CLOSING) == 0)) {
-                    if (angle < CMXD_MODE_CLOSING_MAX + hysteresis) {
-                        new_mode = current_mode_param;  /* Stay in closing mode */
-                    }
-                } else if ((strcmp(new_mode, CMXD_PROTOCOL_MODE_FLAT) == 0 && strcmp(current_mode_param, CMXD_PROTOCOL_MODE_LAPTOP) == 0)) {
+                if ((strcmp(new_mode, CMXD_PROTOCOL_MODE_FLAT) == 0 && strcmp(current_mode_param, CMXD_PROTOCOL_MODE_LAPTOP) == 0)) {
                     if (angle < CMXD_MODE_LAPTOP_MAX + hysteresis) {
                         new_mode = current_mode_param;  /* Stay in laptop mode */
                     }
@@ -242,11 +234,7 @@ const char* cmxd_get_device_mode(double angle, const char* current_mode_param)
                 }
                 
                 /* Reverse transitions (decreasing angle) */
-                else if ((strcmp(new_mode, CMXD_PROTOCOL_MODE_CLOSING) == 0 && strcmp(current_mode_param, CMXD_PROTOCOL_MODE_LAPTOP) == 0)) {
-                    if (angle > CMXD_MODE_CLOSING_MAX - hysteresis) {
-                        new_mode = current_mode_param;  /* Stay in laptop mode */
-                    }
-                } else if ((strcmp(new_mode, CMXD_PROTOCOL_MODE_LAPTOP) == 0 && strcmp(current_mode_param, CMXD_PROTOCOL_MODE_FLAT) == 0)) {
+                if ((strcmp(new_mode, CMXD_PROTOCOL_MODE_LAPTOP) == 0 && strcmp(current_mode_param, CMXD_PROTOCOL_MODE_FLAT) == 0)) {
                     if (angle > CMXD_MODE_LAPTOP_MAX - hysteresis) {
                         new_mode = current_mode_param;  /* Stay in flat mode */
                     }
@@ -290,8 +278,9 @@ const char* cmxd_get_stable_device_mode_with_gravity(double angle, int orientati
         
         /* Determine what mode the angle suggests */
         const char* angle_based_mode;
-        if (angle < CMXD_MODE_CLOSING_MAX) {
-            angle_based_mode = CMXD_PROTOCOL_MODE_CLOSING;
+        if (angle < CMXD_MODE_DEAD_ZONE_MAX) {
+            /* In dead zone - use current mode for confidence check */
+            angle_based_mode = current_mode;
         } else if (angle < CMXD_MODE_LAPTOP_MAX) {
             angle_based_mode = CMXD_PROTOCOL_MODE_LAPTOP;
         } else if (angle < CMXD_MODE_FLAT_MAX) {

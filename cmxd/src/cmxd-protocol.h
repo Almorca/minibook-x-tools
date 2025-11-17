@@ -46,15 +46,15 @@
 #define CMXD_PROTOCOL_MODE_FLAT "flat" 
 #define CMXD_PROTOCOL_MODE_TENT "tent"
 #define CMXD_PROTOCOL_MODE_TABLET "tablet"
-#define CMXD_PROTOCOL_MODE_CLOSING "closing"
 
 /**
- * Orientation values - portrait, portrait-flipped, landscape, landscape-flipped
+ * Orientation values - normal, right-up, left-up, bottom-up
+ * (matching iio-sensor-proxy naming convention)
  */
-#define CMXD_PROTOCOL_ORIENTATION_PORTRAIT "portrait"
-#define CMXD_PROTOCOL_ORIENTATION_PORTRAIT_FLIPPED "portrait-flipped"
-#define CMXD_PROTOCOL_ORIENTATION_LANDSCAPE "landscape"
-#define CMXD_PROTOCOL_ORIENTATION_LANDSCAPE_FLIPPED "landscape-flipped"
+#define CMXD_PROTOCOL_ORIENTATION_NORMAL "normal"
+#define CMXD_PROTOCOL_ORIENTATION_RIGHT_UP "right-up"
+#define CMXD_PROTOCOL_ORIENTATION_LEFT_UP "left-up"
+#define CMXD_PROTOCOL_ORIENTATION_BOTTOM_UP "bottom-up"
 
 /*
  * =============================================================================

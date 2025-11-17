@@ -51,37 +51,17 @@ static char current_device_mode[32] = CMXD_PROTOCOL_MODE_LAPTOP;
 /* Convert CMXD orientation to iio-sensor-proxy format */
 const char *cmxd_dbus_convert_orientation_to_sensor_proxy(const char *cmxd_orientation)
 {
+    /* Now using same naming convention as iio-sensor-proxy, so just pass through */
     if (!cmxd_orientation) return DBUS_ORIENTATION_NORMAL;
-    
-    if (strcmp(cmxd_orientation, CMXD_PROTOCOL_ORIENTATION_LANDSCAPE) == 0) {
-        return DBUS_ORIENTATION_NORMAL;
-    } else if (strcmp(cmxd_orientation, CMXD_PROTOCOL_ORIENTATION_PORTRAIT) == 0) {
-        return DBUS_ORIENTATION_RIGHT_UP;
-    } else if (strcmp(cmxd_orientation, CMXD_PROTOCOL_ORIENTATION_PORTRAIT_FLIPPED) == 0) {
-        return DBUS_ORIENTATION_LEFT_UP;
-    } else if (strcmp(cmxd_orientation, CMXD_PROTOCOL_ORIENTATION_LANDSCAPE_FLIPPED) == 0) {
-        return DBUS_ORIENTATION_BOTTOM_UP;
-    }
-    
-    return DBUS_ORIENTATION_NORMAL;
+    return cmxd_orientation;
 }
 
 /* Convert iio-sensor-proxy orientation to CMXD format */
 const char *cmxd_dbus_convert_orientation_from_sensor_proxy(const char *dbus_orientation)
 {
-    if (!dbus_orientation) return CMXD_PROTOCOL_ORIENTATION_LANDSCAPE;
-    
-    if (strcmp(dbus_orientation, DBUS_ORIENTATION_NORMAL) == 0) {
-        return CMXD_PROTOCOL_ORIENTATION_LANDSCAPE;
-    } else if (strcmp(dbus_orientation, DBUS_ORIENTATION_RIGHT_UP) == 0) {
-        return CMXD_PROTOCOL_ORIENTATION_PORTRAIT;
-    } else if (strcmp(dbus_orientation, DBUS_ORIENTATION_LEFT_UP) == 0) {
-        return CMXD_PROTOCOL_ORIENTATION_PORTRAIT_FLIPPED;
-    } else if (strcmp(dbus_orientation, DBUS_ORIENTATION_BOTTOM_UP) == 0) {
-        return CMXD_PROTOCOL_ORIENTATION_LANDSCAPE_FLIPPED;
-    }
-    
-    return CMXD_PROTOCOL_ORIENTATION_LANDSCAPE;
+    /* Now using same naming convention as iio-sensor-proxy, so just pass through */
+    if (!dbus_orientation) return CMXD_PROTOCOL_ORIENTATION_NORMAL;
+    return dbus_orientation;
 }
 
 /*

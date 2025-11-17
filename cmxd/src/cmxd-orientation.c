@@ -25,7 +25,7 @@
  */
 
 /* Module state */
-static const char* last_known_orientation = CMXD_PROTOCOL_ORIENTATION_LANDSCAPE;
+static const char* last_known_orientation = CMXD_PROTOCOL_ORIENTATION_NORMAL;
 static bool verbose_logging = false;
 
 /* Logging function (set by main application) */
@@ -46,7 +46,7 @@ void cmxd_orientation_set_log_debug(void (*func)(const char *fmt, ...))
 /* Initialize orientation detection module */
 void cmxd_orientation_init(void)
 {
-    last_known_orientation = CMXD_PROTOCOL_ORIENTATION_LANDSCAPE;
+    last_known_orientation = CMXD_PROTOCOL_ORIENTATION_NORMAL;
     verbose_logging = true;  /* Enable verbose logging for tablet protection */
 }
 
@@ -83,18 +83,18 @@ int cmxd_get_device_orientation(double x, double y, double z)
 const char* cmxd_get_platform_orientation(int orientation_code)
 {
     switch (orientation_code) {
-        case CMXD_DEVICE_X_DOWN:  /* X-down - normal laptop landscape position */
-            return CMXD_PROTOCOL_ORIENTATION_LANDSCAPE;
-        case CMXD_DEVICE_X_UP:    /* X-up - laptop upside down landscape */
-            return CMXD_PROTOCOL_ORIENTATION_LANDSCAPE_FLIPPED;
-        case CMXD_DEVICE_Y_UP:    /* Y-up - laptop standing vertically (portrait) */
-            return CMXD_PROTOCOL_ORIENTATION_PORTRAIT;
-        case CMXD_DEVICE_Y_DOWN:  /* Y-down - laptop standing vertically (portrait-flipped) */
-            return CMXD_PROTOCOL_ORIENTATION_PORTRAIT_FLIPPED;
-        case CMXD_DEVICE_Z_UP:    /* Z-up - unusual orientation, default to landscape */
-        case CMXD_DEVICE_Z_DOWN:  /* Z-down - unusual orientation, default to landscape */
+        case CMXD_DEVICE_X_DOWN:  /* X-down - normal laptop position */
+            return CMXD_PROTOCOL_ORIENTATION_NORMAL;
+        case CMXD_DEVICE_X_UP:    /* X-up - laptop upside down */
+            return CMXD_PROTOCOL_ORIENTATION_BOTTOM_UP;
+        case CMXD_DEVICE_Y_UP:    /* Y-up - laptop standing vertically (right side up) */
+            return CMXD_PROTOCOL_ORIENTATION_RIGHT_UP;
+        case CMXD_DEVICE_Y_DOWN:  /* Y-down - laptop standing vertically (left side up) */
+            return CMXD_PROTOCOL_ORIENTATION_LEFT_UP;
+        case CMXD_DEVICE_Z_UP:    /* Z-up - unusual orientation, default to normal */
+        case CMXD_DEVICE_Z_DOWN:  /* Z-down - unusual orientation, default to normal */
         default:
-            return CMXD_PROTOCOL_ORIENTATION_LANDSCAPE;  /* Default to landscape for edge cases */
+            return CMXD_PROTOCOL_ORIENTATION_NORMAL;  /* Default to normal for edge cases */
     }
 }
 
@@ -110,7 +110,7 @@ const char* cmxd_get_orientation_simple(double x, double y, double z)
 }
 
 /* Get orientation with tablet mode reading protection */
-/* Prevents orientation changes FROM portrait in tablet mode when tilted > 45° for reading stability */
+/* Prevents orientation changes FROM vertical orientations (right-up/left-up) in tablet mode when tilted > 45° for reading stability */
 /* Also implements general tilt protection to prevent orientation bouncing during device transitions */
 const char* cmxd_get_orientation_with_tablet_protection(double x, double y, double z, const char* current_mode)
 {
@@ -122,15 +122,15 @@ const char* cmxd_get_orientation_with_tablet_protection(double x, double y, doub
     double tilt_angle = cmxd_calculate_tilt_angle(x, y, z);
     
     /* Option 3: Tilt-based orientation lock for tablet mode
-     * When in tablet mode and starting in portrait, if tilt goes below 45° (lying flat),
-     * lock orientation until it comes back above 45° to prevent unwanted landscape switches */
+     * When in tablet mode and starting in a vertical orientation (right-up/left-up), if tilt goes below 45° (lying flat),
+     * lock orientation until it comes back above 45° to prevent unwanted switches to normal */
     if (current_mode && strcmp(current_mode, CMXD_PROTOCOL_MODE_TABLET) == 0 && 
         last_known_orientation != NULL && 
-        (strcmp(last_known_orientation, CMXD_PROTOCOL_ORIENTATION_PORTRAIT) == 0 || 
-         strcmp(last_known_orientation, CMXD_PROTOCOL_ORIENTATION_PORTRAIT_FLIPPED) == 0) &&  /* Currently in portrait */
+        (strcmp(last_known_orientation, CMXD_PROTOCOL_ORIENTATION_RIGHT_UP) == 0 || 
+         strcmp(last_known_orientation, CMXD_PROTOCOL_ORIENTATION_LEFT_UP) == 0) &&  /* Currently in vertical orientations (right-up/left-up) */
         tilt_angle < 45.0 &&  /* Tilted flat (lying on table) */
-        (strcmp(orientation_name, CMXD_PROTOCOL_ORIENTATION_LANDSCAPE) == 0 || 
-         strcmp(orientation_name, CMXD_PROTOCOL_ORIENTATION_LANDSCAPE_FLIPPED) == 0)) {         /* Trying to switch to landscape */
+        (strcmp(orientation_name, CMXD_PROTOCOL_ORIENTATION_NORMAL) == 0 || 
+         strcmp(orientation_name, CMXD_PROTOCOL_ORIENTATION_BOTTOM_UP) == 0)) {         /* Trying to switch to normal/bottom-up */
         
         /* Tablet tilt lock debug output reduced */
         return last_known_orientation;
@@ -153,12 +153,8 @@ const char* cmxd_get_orientation_with_sensor_switching(double lid_x, double lid_
     
     /* Mode-specific orientation handling */
     if (current_mode && strcmp(current_mode, CMXD_PROTOCOL_MODE_LAPTOP) == 0) {
-        /* Laptop mode: ALWAYS landscape - ignore device rotation */
-        return CMXD_PROTOCOL_ORIENTATION_LANDSCAPE;
-        
-    } else if (current_mode && strcmp(current_mode, CMXD_PROTOCOL_MODE_CLOSING) == 0) {
-        /* Closing mode: ALWAYS landscape - device is closing/opening */
-        return CMXD_PROTOCOL_ORIENTATION_LANDSCAPE;
+        /* Laptop mode: ALWAYS normal - ignore device rotation */
+        return CMXD_PROTOCOL_ORIENTATION_NORMAL;
         
     } else if (current_mode && (strcmp(current_mode, CMXD_PROTOCOL_MODE_TABLET) == 0 || strcmp(current_mode, CMXD_PROTOCOL_MODE_TENT) == 0)) {
         /* Tablet/Tent mode: Use base sensor with tablet protection */
