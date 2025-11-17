@@ -40,7 +40,7 @@
 
 /* VERSION and PROGRAM_NAME are provided by Makefile via -D flags */
 #ifndef VERSION
-#define VERSION "1.0.0"
+#define VERSION "9999"
 #endif
 #ifndef PROGRAM_NAME
 #define PROGRAM_NAME "cmxsd"

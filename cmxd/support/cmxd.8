@@ -1,0 +1,181 @@
+.TH CMXD 8 "November 2025" "cmxd 5.0.2" "System Management Commands"
+.SH NAME
+cmxd \- Chuwi Minibook X tablet mode daemon
+.SH SYNOPSIS
+.B cmxd
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+.B cmxd
+is a userspace daemon that detects tablet mode for the Chuwi Minibook X convertible laptop. It reads accelerometer data from IIO devices, calculates hinge angles and device orientation, and communicates with the
+.B cmx
+kernel module to generate tablet mode input events.
+
+The daemon operates in an event-driven manner using IIO triggers, minimizing CPU usage while providing responsive mode detection.
+
+.SH OPTIONS
+.TP
+.BR \-t ", " \-\-timeout\-ms " \fIMS\fR"
+Buffer read timeout in milliseconds. This is the timeout for the poll() system call waiting for IIO buffer data, not a polling interval. Default: 100. Valid range: 1-10000.
+.TP
+.BR \-s ", " \-\-sysfs\-path " \fIPATH\fR"
+Path to the kernel module's sysfs directory. Default: /sys/devices/platform/cmx. Override only if using a custom kernel module path.
+.TP
+.BR \-v ", " \-\-verbose
+Enable verbose logging. Shows all debug information including accelerometer readings, angle calculations, and mode transitions.
+.TP
+.BR \-\-no\-dbus
+Disable DBus event publishing. By default, the daemon publishes orientation and mode changes via DBus for desktop integration (iio-sensor-proxy compatibility).
+.TP
+.BR \-h ", " \-\-help
+Display usage information and exit.
+.TP
+.BR \-V ", " \-\-version
+Display version information and exit.
+
+.SH CONFIGURATION
+Configuration is read from
+.I /etc/default/cmxd
+if present. The file supports the following variables:
+
+.TP
+.B BUFFER_TIMEOUT_MS
+Buffer read timeout in milliseconds (same as \fB\-t\fR option).
+.TP
+.B SYSFS_DIR
+Kernel module sysfs path (same as \fB\-s\fR option).
+
+Command line options override configuration file settings.
+
+.SH DEVICE DETECTION
+Device assignments are automatically detected from the
+.B cmx
+kernel module. The daemon reads the
+.I iio_base_device
+and
+.I iio_lid_device
+attributes from the kernel module's sysfs interface to determine which IIO devices correspond to base and lid accelerometers.
+
+.SH MODES
+The daemon detects four device modes based on hinge angle:
+.TP
+.B laptop
+Traditional laptop position (45° - 160°)
+.TP
+.B flat
+Device lying flat or opening towards flat (160° - 240°)
+.TP
+.B tent
+Tent mode - lid folded back (240° - 345°)
+.TP
+.B tablet
+Fully folded back for tablet use (345° - 360°)
+
+A dead zone (0° - 45°) maintains the current mode to prevent jitter during device manipulation.
+
+.SH ORIENTATIONS
+The daemon detects four screen orientations matching iio-sensor-proxy naming:
+.TP
+.B normal
+Standard landscape orientation
+.TP
+.B right-up
+Device rotated 90° clockwise (portrait)
+.TP
+.B left-up
+Device rotated 90° counter-clockwise (portrait flipped)
+.TP
+.B bottom-up
+Device rotated 180° (landscape flipped)
+
+.SH COMMUNICATION
+The daemon communicates through multiple channels:
+.TP
+.B Sysfs
+Writes accelerometer data, mode, and orientation to the kernel module via
+.IR /sys/devices/platform/cmx/ .
+.TP
+.B Unix Socket
+Publishes JSON events to
+.I /run/cmxd/events.sock
+for client applications.
+.TP
+.B DBus
+Emits iio-sensor-proxy compatible signals on the system bus (unless disabled with \fB\-\-no-dbus\fR).
+
+.SH SIGNALS
+.TP
+.B SIGTERM, SIGINT
+Gracefully shutdown the daemon, cleaning up resources and resetting the kernel module state.
+
+.SH FILES
+.TP
+.I /etc/default/cmxd
+Configuration file
+.TP
+.I /sys/devices/platform/cmx/
+Kernel module sysfs interface
+.TP
+.I /run/cmxd/events.sock
+Unix domain socket for event publication
+.TP
+.I /var/log/syslog
+Log messages (when running as service)
+
+.SH DEPENDENCIES
+.TP
+.B cmx kernel module
+Platform driver that creates sysfs interface and generates input events
+.TP
+.B IIO accelerometers
+Two MXC4005 accelerometer devices (base and lid)
+.TP
+.B DBus (optional)
+System bus for desktop integration
+
+.SH EXAMPLES
+.TP
+Run with defaults (auto-detected devices):
+.B cmxd
+
+.TP
+Verbose mode for debugging:
+.B cmxd -v
+
+.TP
+Custom buffer timeout:
+.B cmxd -t 50
+
+.TP
+Disable DBus integration:
+.B cmxd --no-dbus
+
+.TP
+Custom sysfs path:
+.B cmxd -s /sys/devices/platform/custom-cmx
+
+.SH EXIT STATUS
+.TP
+.B 0
+Success
+.TP
+.B 1
+General error (missing devices, initialization failure, etc.)
+
+.SH NOTES
+The daemon automatically configures accelerometers to their least sensitive scale setting for stable mode detection. This reduces noise and prevents false mode transitions.
+
+The daemon requires root privileges to access IIO devices and communicate with the kernel module.
+
+.SH SEE ALSO
+.BR cmx (4),
+.BR cmxsd (8),
+.BR iio_event_monitor (1),
+.BR evtest (1)
+
+.SH AUTHOR
+Armando DiCianno <armando@noonshy.com>
+
+.SH COPYRIGHT
+Copyright (C) 2025 Armando DiCianno
+.br
+License: GPL-2.0

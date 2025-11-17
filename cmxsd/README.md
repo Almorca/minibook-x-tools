@@ -51,16 +51,19 @@ groups | grep -q input && echo "✓ In input group" || echo "✗ Not in input gr
 
 ### 3. Configure Your Scripts
 
+You can run `make install-user` or the following ...
+
 ```bash
 # Copy example scripts to active configuration
 cp ~/.config/tablet-mode/tablet-on.sh.example ~/.config/tablet-mode/tablet-on.sh
 cp ~/.config/tablet-mode/tablet-off.sh.example ~/.config/tablet-mode/tablet-off.sh
+cp ~/.config/tablet-mode/rotate-screen.sh.example ~/.config/tablet-mode/rotate-screen.sh
 
 # Optionally customize the daemon configuration
 cp ~/.config/cmxsd/daemon.conf.example ~/.config/cmxsd/daemon.conf
 ```
 
-### 4. Enable the Service
+#### 3.1 Enable the Service
 
 ```bash
 systemctl --user daemon-reload
@@ -91,29 +94,16 @@ The default scripts provide optimized desktop environment integration. You can c
 
 ```bash
 # View the default tablet mode script
-cat ~/.config/cmxsd/tablet-on.sh.example
+cat ~/.config/cmxsd/tablet-mode-on.sh.example
 
 # Customize for your setup
-cp ~/.config/cmxsd/tablet-on.sh.example ~/.config/cmxsd/tablet-on.sh
-editor ~/.config/cmxsd/tablet-on.sh
+cp ~/.config/cmxsd/tablet-mode-on.sh.example ~/.config/cmxsd/tablet-mode-on.sh
+editor ~/.config/cmxsd/tablet-mode-on.sh
 ```
 
 ## Virtual Keyboard Setup
 
-The default scripts support multiple virtual keyboards. Install your preference:
-
-```bash
-# Option 1: onboard (GNOME virtual keyboard)
-sudo pacman -S onboard        # Arch
-sudo apt install onboard      # Debian/Ubuntu
-
-# Option 2: squeekboard (mobile-optimized)
-sudo pacman -S squeekboard    # Arch  
-sudo apt install squeekboard  # Debian/Ubuntu
-
-# Option 3: wvkbd (lightweight Wayland)
-sudo pacman -S wvkbd-git      # Arch AUR
-```
+The default scripts support multiple virtual keyboards. Install your preference: wvkbd, onboard, squeekboard, etc.
 
 ## Testing
 
@@ -142,6 +132,7 @@ tablet_device=/dev/input/event20
 # Scripts to execute on mode changes
 on_tablet_script=~/.config/cmxsd/tablet-on.sh
 on_laptop_script=~/.config/cmxsd/tablet-off.sh
+on_rotate_script=~/.config/cmxsd/rotate-screen.sh
 
 # Prevent rapid switching (milliseconds)
 debounce_ms=500
@@ -149,42 +140,6 @@ debounce_ms=500
 # Enable debug logging
 verbose=1
 ```
-
-### Default Scripts
-
-The installation provides example scripts with optimized Hyprland integration:
-
-- **`tablet-on.sh.example`**: Tablet mode activation with virtual keyboard and touch optimizations
-- **`tablet-off.sh.example`**: Laptop mode restoration with desktop settings
-
-Copy and customize these scripts for your needs:
-
-```bash
-# View the default tablet script
-cat ~/.config/cmxsd/tablet-on.sh.example
-
-# Customize tablet mode behavior
-cp ~/.config/cmxsd/tablet-on.sh.example ~/.config/cmxsd/tablet-on.sh
-editor ~/.config/cmxsd/tablet-on.sh
-```
-
-## Built-in Hyprland Optimizations
-
-The default scripts provide these Hyprland adjustments:
-
-### Tablet Mode Activations
-- **Remove gaps**: `gaps_in=0`, `gaps_out=0` for more screen space
-- **Disable rounding**: `rounding=0` for cleaner touch targets  
-- **Enable natural scroll**: Touch-friendly scrolling direction
-- **Virtual keyboard integration**: Automatic launching with proper window rules
-- **Disable shadows**: `drop_shadow=false` for performance
-
-### Laptop Mode Restorations
-- **Restore gaps**: `gaps_in=4`, `gaps_out=8` for desktop aesthetics
-- **Enable rounding**: `rounding=8` for visual polish
-- **Disable natural scroll**: Traditional desktop scrolling
-- **Close virtual keyboards**: Clean shutdown of touch input methods
-- **Enable shadows**: `drop_shadow=true` for depth
 
 ## Device Detection
 
@@ -225,16 +180,6 @@ systemctl --user status cmxsd
 journalctl --user -u cmxsd
 ```
 
-**Hyprctl Commands Failing**
-```bash
-# Test hyprctl access
-hyprctl version
-echo $HYPRLAND_INSTANCE_SIGNATURE
-
-# Check Hyprland socket
-ls -la $XDG_RUNTIME_DIR/hypr/
-```
-
 **Virtual Keyboard Not Appearing**
 ```bash
 # Test manual launch
@@ -256,6 +201,8 @@ systemctl --user stop cmxsd
 cmxsd -f -v
 
 # In another terminal, test mode switching
+# *** If you don't do this, you won't be able to type after the 2nd command.
+echo false | sudo tee /sys/devices/platform/cmx/enable
 echo tablet | sudo tee /sys/devices/platform/cmx/mode
 echo laptop | sudo tee /sys/devices/platform/cmx/mode
 ```
