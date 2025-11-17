@@ -2,9 +2,9 @@
 
 Linux hardware support for the **Chuwi Minibook X** convertible laptop. Provides tablet mode detection through accelerometer data and integrates with desktop environments.
 
-The cmxd and cmxsd may be useful for othere platforms that use two accelerometers in order
+The cmxd and cmxsd may be useful for other platforms that use two accelerometers in order
 to detect tablet mode configuration. The cmx module is only required as the CHUWI Minibook X
-platform ACPI does not bring up both accelerometes. If you find that these daemons work for you, please email or message me with your platform information.
+platform ACPI does not bring up both accelerometers. If you find that these daemons work for you, please email or message me with your platform information.
 
 ## System Architecture
 
