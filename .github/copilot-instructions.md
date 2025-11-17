@@ -134,7 +134,7 @@ cat /sys/bus/iio/devices/iio:device0/in_accel_*_raw
 # Check mount matrices applied
 cat /sys/bus/iio/devices/iio:device*/in_accel_mount_matrix
 
-# Monitor laptop mode state - closing <-> laptop <-> flat <-> tent <-> tablet
+# Monitor laptop mode state - laptop <-> flat <-> tent <-> tablet (0-45° = dead zone maintains current mode)
 watch 'cat /sys/devices/platform/cmx/mode'
 ```
 
