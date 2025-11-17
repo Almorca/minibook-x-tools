@@ -69,8 +69,8 @@ Runtime configuration and monitoring at `/sys/kernel/cmx/`:
 ### Data Input/Output
 - `base_vec` (rw) - Base accelerometer vector: "x y z" in micro-g
 - `lid_vec` (rw) - Lid accelerometer vector: "x y z" in micro-g
-- `mode` (rw) - Current mode: laptop, flat, tent, tablet, closing
-- `orientation` (rw) - Current orientation: portrait, landscape, portrait-flipped, landscape-flipped
+- `mode` (rw) - Current mode: laptop, flat, tent, tablet
+- `orientation` (rw) - Current orientation: normal, right-up, left-up, bottom-up
 
 ### Device Information
 - `iio_base_device` (r) - IIO device name for base accelerometer
@@ -249,15 +249,6 @@ echo "$lid_x $lid_y $lid_z" > /sys/kernel/cmx/lid_vec
 - **Work Queues**: Uses delayed work for periodic processing
 - **Input Events**: Reports via standard Linux input subsystem
 - **Fixed-Point Math**: Avoids floating-point operations in kernel
-
-## Files
-
-- `cmx.c` - Main module implementation
-- `cmx.h` - Header with structure definitions
-- `Makefile` - Build configuration
-- `Kconfig` - Kernel configuration options
-- `test-enable-sysfs.sh` - Test script for enable sysfs attribute
-- `ENABLE_SYSFS_IMPLEMENTATION.md` - Detailed enable feature documentation
 
 ## License
 

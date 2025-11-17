@@ -30,11 +30,11 @@
 
 /* Valid mode and orientation strings for validation */
 static const char * const valid_modes[] = {
-	"closing", "laptop", "flat", "tent", "tablet", NULL
+	"laptop", "flat", "tent", "tablet", NULL
 };
 
 static const char * const valid_orientations[] = {
-	"portrait", "landscape", "portrait-flipped", "landscape-flipped", NULL
+	"normal", "right-up", "left-up", "bottom-up", NULL
 };
 
 /* IIO device names for accelerometers */
@@ -104,7 +104,7 @@ static struct vec3 g_lid = { 0, 0, -1000000 };
 static char current_mode[16] = "laptop";
 
 /* Current device orientation string */
-static char current_orientation[32] = "landscape";
+static char current_orientation[32] = "normal";
 
 /* Enable/disable SW_TABLET_MODE input events */
 static bool enable_events = true;
